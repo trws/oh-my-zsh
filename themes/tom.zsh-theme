@@ -119,12 +119,14 @@ build_prompt() {
   COUNT=0
   prompt_context
   local cont_length=$COUNT
-  echo -n "%K{cyan}%F{black}"
-  echo -n " %D{%H:%M}"
-  CURRENT_BG="cyan"
+prompt_segment cyan black "%D{%H:%M}"
+
+  #echo -n "%K{cyan}%F{black}"
+  #echo -n " %D{%H:%M}"
+  #CURRENT_BG="cyan"
   prompt_status
   if [[ $CURRENT_BG != 'NONE' ]]; then
-    echo -n " %{%{%K{235}%}%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR" && COUNT=$(($COUNT + 2))
+    echo -n " %{%{%K{235}%}%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR" && COUNT=$(($COUNT + 1))
   else
     echo -n "%{%k%}"
   fi
