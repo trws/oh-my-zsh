@@ -95,7 +95,8 @@ prompt_dir() {
   #if [[ $CURRENT_BG == 'NONE' ]] ; then
     extra_sep="$SEGMENT_REVERSE"
   #fi
-  echo -n "%{%F{024}%}$CURRENT_BG$extra_sep%{%K{024}%}%{%F{254}%}%~ "
+  #echo -n "%{%F{024}%}$CURRENT_BG$extra_sep%{%K{024}%}%{%F{254}%}%~ "
+  echo -n "%{%F{024}%}$extra_sep%{%K{024}%}%{%F{254}%}%~ "
   #prompt_segment 024 254 "$extra_sep%~"
 }
 
@@ -119,7 +120,9 @@ build_prompt() {
   COUNT=0
   prompt_context
   local cont_length=$COUNT
-prompt_segment cyan black "%D{%H:%M}"
+  local TIME="%D{%H:%M}"
+  local DATE="%D{%a,%b%d,%y}"
+  prompt_segment cyan black "$TIME"
 
   #echo -n "%K{cyan}%F{black}"
   #echo -n " %D{%H:%M}"
@@ -133,26 +136,27 @@ prompt_segment cyan black "%D{%H:%M}"
   CURRENT_BG="%{%K{235}%}"
   echo -n $CURRENT_BG
 
-  local pwdsize=${#${(%):-%~  %D{%H:%M}}}
+  #local pwdsize=${#${(%):-%~  %D{%H:%M}}}
+  local pwdsize=${#${(%):-${TIME}${SEGMENT_SEPARATOR}${SEGMENT_REVERSE}${DATE}}}
   if [[  $cont_length -ne 0 ]] ; then
     pwdsize=$(($pwdsize + 2))
   else
     pwdsize=$(($pwdsize + 1))
   fi
   local nil=''
-  PR_FILLBAR="\${(mr.(($COLUMNS - 1 - $pwdsize - $COUNT)).. .)nil}"
+  PR_FILLBAR="\${(mr.(($COLUMNS - $pwdsize - $COUNT)).. .)nil}"
   echo -n "${(e)PR_FILLBAR}"
+  echo -n "%K{black}%F{cyan}$SEGMENT_REVERSE%K{cyan}%F{black}"
+  echo -n "$DATE"
   #echo $COUNT
   #echo -n "$COLUMNS $promptsize $pwdsize" (($COLUMNS - $pwdsize $COUNT))
-  prompt_dir
   echo
   CURRENT_BG='NONE'
   prompt_git
   prompt_end
 }
 build_right(){
-  echo -n "%K{black}%F{cyan}$SEGMENT_REVERSE%K{cyan}%F{black}"
-  echo -n "%D{%a,%b%d,%y}"
+  prompt_dir
 }
 
 PROMPT='%{%f%b%k%}$(build_prompt) '
