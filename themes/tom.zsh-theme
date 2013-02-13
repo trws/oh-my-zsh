@@ -26,8 +26,13 @@
 # A few utility functions to make it easy and re-usable to draw segmented prompts
 
 CURRENT_BG='NONE'
-SEGMENT_SEPARATOR='⮀'
-SEGMENT_REVERSE='⮂'
+if [[ $HOST  == 'typhoon' ]] ; then
+  SEGMENT_SEPARATOR='⮀'
+  SEGMENT_REVERSE='⮂'
+else
+  SEGMENT_SEPARATOR='▶'
+  SEGMENT_REVERSE='◀'
+fi
 
 # Begin a segment
 # Takes two arguments, background and foreground. Both can be omitted,
@@ -85,7 +90,28 @@ prompt_git() {
     fi
     echo -n "${ref/refs\/heads\//⭠ }$dirty"
   else
+    if $(svn info >&/dev/null); then
+      local sinfo="$(svn info 2>/dev/null | grep 'Repository Root' | cut -f 3)"
+      local origin=''
+      if [[ "$sinfo" =~ '.*charon.*' ]] ; then
+        origin='Charon/'
+      elif [[ "$sinfo" =~ '.*(hurricane|scogland.com).*' ]] ; then
+        origin='Hurricane/'
+      else
+        origin="$(echo $sinfo | sed -e 's|.*[^:]*://[/]*\([^/]*\)/.*|\1|')/"
+        #regexp-replace origin '://[/]*([^/]*)/' '$MATCH'
+      fi
+      dirty=$(svn status | grep -e '^M' -e '^C')
+      if [[ -n $dirty ]]; then
+        prompt_segment yellow black
+      else
+        prompt_segment green black
+      fi
+      echo -n "svn:${origin}$(basename ${sinfo})"
+
+    else
       prompt_segment green black
+    fi
   fi
 }
 
