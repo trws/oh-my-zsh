@@ -90,28 +90,38 @@ prompt_git() {
     fi
     echo -n "${ref/refs\/heads\//⭠ }$dirty"
   else
-    if $(svn info >&/dev/null); then
+    local sinfo_complete sinfo_status
+    sinfo_complete=$(svn info 2>&1)
+    sinfo_status=$?
+    if [ $sinfo_status -eq 0 ]; then
       local sinfo="$(svn info 2>/dev/null | grep 'Repository Root' | cut -f 3)"
-      local origin=''
-      if [[ "$sinfo" =~ '.*charon.*' ]] ; then
-        origin='Charon/'
-      elif [[ "$sinfo" =~ '.*(hurricane|scogland.com).*' ]] ; then
-        origin='Hurricane/'
-      else
-        origin="$(echo $sinfo | sed -e 's|.*[^:]*://[/]*\([^/]*\)/.*|\1|')/"
-        #regexp-replace origin '://[/]*([^/]*)/' '$MATCH'
-      fi
-      dirty=$(svn status | grep -e '^M' -e '^C')
-      if [[ -n $dirty ]]; then
-        prompt_segment yellow black
+      local origin="$(svn_repo_root_name $sinfo_complete)"
+      # if [[ "$sinfo" =~ '.*charon.*' ]] ; then
+      #   origin='Charon/'
+      # elif [[ "$sinfo" =~ '.*(hurricane|scogland.com).*' ]] ; then
+      #   origin='Hurricane/'
+      # else
+      #   origin="$(echo $sinfo | sed -e 's|.*[^:]*://[/]*\([^/]*\)/.*|\1|')/"
+      #   #regexp-replace origin '://[/]*([^/]*)/' '$MATCH'
+      # fi
+      # dirty=$(svn status | grep -e '^M' -e '^C')
+      # if [[ -n $dirty ]]; then
+      #   prompt_segment yellow black
+      # else
+        prompt_segment green black
+      # fi
+      echo -n "svn:${origin}"
+      # echo -n "svn:${origin}$(basename ${sinfo})"
+    else
+      local need_upgrade="$(svn_repo_need_upgrade $sinfo_complete 2>&1)"
+      if [[ -n $need_upgrade ]] ; then
+        prompt_segment red black
+        echo -n "svn:upgrade!"
       else
         prompt_segment green black
       fi
-      echo -n "svn:${origin}$(basename ${sinfo})"
-
-    else
-      prompt_segment green black
     fi
+
   fi
 }
 
